@@ -4,23 +4,68 @@ author: "Yefrid Cordoba"
 format: html
 ---
 
-## Quarto
+## Introduction
 
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
 
-## Running Code
 
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+## 1. Data Processing
 
-```{r}
-1 + 1
-```
+### 1.1 Parsing Variable Values
 
-You can add options to executable code like this 
+First we start by loading the libraries that we need
 
 ```{r}
-#| echo: false
-2 * 2
+#| message: FALSE
+#| warning: FALSE
+library(tidyverse)
+library(httr)
+library(jsonlite)
 ```
 
-The `echo: false` option disables the printing of code (only output is displayed).
+
+Preparing the data we start downloading and parsing the JSON files with the variables description.
+
+To perform this job we need to create a link that it is needed to request the variables info from the census API, as year is one of our variables, we use the function `paste0()` to add the year that is going to be used by the function.   
+Then we feed the link to the function `GET()` and parse the data from the JSON file.   
+We get the variables that we need (Shown below in the function definition), applying the correct modification for `"ST"` when the year is 2021 or 2022.
+
+```{r}
+var_census <- function(year){
+  link <- paste0("https://api.census.gov/data/", as.character(year),
+                 "/acs/acs1/pums/variables.json")
+  
+  census_var <- GET(url = link)
+  
+  var_parsed <- fromJSON(rawToChar(census_var$content))[[1]]
+  
+  state <- "STATE"
+  
+  if(year %in% c(2021, 2022)){
+    state <- "ST"
+  }
+  
+  var_to_keep <- c("AGEP", "GASP", "GRPIP", "JWAP", "JWDP", "JWMNP", "PWGTP",
+                   "FER", "HHL", "SCH", "SCHL", "SEX", state, "REGION",
+                   "DIVISION")
+  var_parsed <- var_parsed[var_to_keep]
+  
+  return(var_parsed)
+
+}
+```
+
+Now we need to get the variables for each year, and save them in a list that we will save in a `.rds` file.
+
+```{r}
+Variables_21_24 <- list(
+  Variables_21 = var_census(2021),
+  Variables_22 = var_census(2022),
+  Variables_23 = var_census(2023),
+  Variables_24 = var_census(2024)
+)
+
+saveRDS(Variables_21_24, file = "data/Variables_census.rds")
+```
+
+### 1.2 Parsing API Data
+

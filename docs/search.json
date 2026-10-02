@@ -1,23 +1,9 @@
 [
   {
-    "objectID": "ST558_Project_1.html",
-    "href": "ST558_Project_1.html",
+    "objectID": "ST558_Project_1.html#data-processing",
+    "href": "ST558_Project_1.html#data-processing",
     "title": "ST558 - Project 1",
-    "section": "",
-    "text": "Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see https://quarto.org."
-  },
-  {
-    "objectID": "ST558_Project_1.html#quarto",
-    "href": "ST558_Project_1.html#quarto",
-    "title": "ST558 - Project 1",
-    "section": "",
-    "text": "Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see https://quarto.org."
-  },
-  {
-    "objectID": "ST558_Project_1.html#running-code",
-    "href": "ST558_Project_1.html#running-code",
-    "title": "ST558 - Project 1",
-    "section": "Running Code",
-    "text": "Running Code\nWhen you click the Render button a document will be generated that includes both content and the output of embedded code. You can embed code like this:\n\n1 + 1\n\n[1] 2\n\n\nYou can add options to executable code like this\n\n\n[1] 4\n\n\nThe echo: false option disables the printing of code (only output is displayed)."
+    "section": "1. Data Processing",
+    "text": "1. Data Processing\n\n1.1 Parsing Variable Values\nFirst we start by loading the libraries that we need\n\nlibrary(tidyverse)\nlibrary(httr)\nlibrary(jsonlite)\n\nPreparing the data we start downloading and parsing the JSON files with the variables description.\nTo perform this job we need to create a link that it is needed to request the variables info from the census API, as year is one of our variables, we use the function paste0() to add the year that is going to be used by the function.\nThen we feed the link to the function GET() and parse the data from the JSON file.\nWe get the variables that we need (Shown below in the function definition), applying the correct modification for \"ST\" when the year is 2021 or 2022.\n\nvar_census &lt;- function(year){\n  link &lt;- paste0(\"https://api.census.gov/data/\", as.character(year),\n                 \"/acs/acs1/pums/variables.json\")\n  \n  census_var &lt;- GET(url = link)\n  \n  var_parsed &lt;- fromJSON(rawToChar(census_var$content))[[1]]\n  \n  state &lt;- \"STATE\"\n  \n  if(year %in% c(2021, 2022)){\n    state &lt;- \"ST\"\n  }\n  \n  var_to_keep &lt;- c(\"AGEP\", \"GASP\", \"GRPIP\", \"JWAP\", \"JWDP\", \"JWMNP\", \"PWGTP\",\n                   \"FER\", \"HHL\", \"SCH\", \"SCHL\", \"SEX\", state, \"REGION\",\n                   \"DIVISION\")\n  var_parsed &lt;- var_parsed[var_to_keep]\n  \n  return(var_parsed)\n\n}\n\nNow we need to get the variables for each year, and save them in a list that we will save in a .rds file.\n\nVariables_21_24 &lt;- list(\n  Variables_21 = var_census(2021),\n  Variables_22 = var_census(2022),\n  Variables_23 = var_census(2023),\n  Variables_24 = var_census(2024)\n)\n\nsaveRDS(Variables_21_24, file = \"data/Variables_census.rds\")\n\n\n\n1.2 Parsing API Data"
   }
 ]
