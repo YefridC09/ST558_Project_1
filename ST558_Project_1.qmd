@@ -193,7 +193,7 @@ parse_census <- function(user_year = 2024, num_var = c("AGEP", "PWGTP"),
   }
   
   
-  
+  print(paste0("after", geo))
   # Checking that the allowed variables are correct
   year_2digit <- substr(as.character(user_year), 3, 4)
   
@@ -209,6 +209,8 @@ parse_census <- function(user_year = 2024, num_var = c("AGEP", "PWGTP"),
   
   #Turning inputs in census codes
   geo_lookup <- Variables[[target_name]][[geo]]$values$item
+  
+  print(sub_geo)
   
   if(all(tolower(sub_geo) == "all")){
     geo_codes <- "*"
