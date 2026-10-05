@@ -69,3 +69,39 @@ saveRDS(Variables_21_24, file = "data/Variables_census.rds")
 
 ### 1.2 Parsing API Data
 
+Start by getting the usual process to work with a given URL??
+
+We are going to write a helper function that takes what is returned by `GET()` and turn it into a nice tibble.
+
+```{r}
+get_to_tibble <- function(u_info){
+  
+  parsed <- fromJSON(rawToChar(u_info$content))
+  
+  n_tibble <- as_tibble(parsed$data)
+  
+  return(n_tibble)
+  
+}
+```
+
+Now we are going to create a function to query the census API, where the user specifies year, the numeric and categorical variables to be returned, the geography level, and the specific region, division or state to subset the data on.
+
+```{r}
+parse_census <- function(year = 2024, num_var = c("AGEP", "PWGTP"), 
+                         cat_var = c("SEX"), geo = "STATE", sub_geo = NULL ){
+  #Checing for the correct year
+  if(!(year %in% c(2021, 2022, 2023, 2024))){
+    stop("Year should be one of (2021, 2022, 2023, or 2024)")
+  }
+  
+  #Checking for the presence of "PWGTP", always needs to be returned
+  if(!("PWGTP" %in% num_var)){
+    num_var <- c(num_var, "PWGTP")
+  }
+  
+  
+  
+}
+```
+
