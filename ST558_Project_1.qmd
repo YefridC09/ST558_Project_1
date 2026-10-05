@@ -20,6 +20,8 @@ First we start by loading the libraries that we need
 library(tidyverse)
 library(httr)
 library(jsonlite)
+library(lubridate)
+library(hms)
 ```
 
 
@@ -87,11 +89,43 @@ get_to_tibble <- function(u_info){
 
 Now we are going to create a function to query the census API, where the user specifies year, the numeric and categorical variables to be returned, the geography level, and the specific region, division or state to subset the data on.
 
+We are going to use this helper function to handle the time variables (created using LLM).
+
 ```{r}
-parse_census <- function(year = 2024, num_var = c("AGEP", "PWGTP"), 
+
+parse_jwp_midpoint <- function(jwp_vector) {
+  # 1. Regex pattern to extract ONLY valid time range substrings
+  # Ignores prefixes like "001: " and returns NA for non-time entries like "0: N/A..."
+  pattern <- "\\d{1,2}:\\d{2}\\s*(?:a\\.m\\.|p\\.m\\.|am|pm)\\s+to\\s+\\d{1,2}:\\d{2}\\s*(?:a\\.m\\.|p\\.m\\.|am|pm)"
+  time_ranges <- stringr::str_extract(jwp_vector, pattern)
+  
+  # 2. Clean dots from a.m./p.m.
+  clean_vec <- gsub("\\.", "", time_ranges)
+  
+  # 3. Split into start and end time columns
+  times_matrix <- stringr::str_split_fixed(clean_vec, " to ", 2)
+  
+  # 4. Parse times into POSIXct objects
+  t_start <- parse_date_time(times_matrix[, 1], orders = "I:M p", quiet = TRUE)
+  t_end   <- parse_date_time(times_matrix[, 2], orders = "I:M p", quiet = TRUE)
+  
+  # 5. Handle overnight ranges (e.g., 11:50 p.m. to 12:10 a.m.)
+  overnight <- !is.na(t_start) & !is.na(t_end) & (t_end < t_start)
+  t_end[overnight] <- t_end[overnight] + days(1)
+  
+  # 6. Calculate midpoint and convert to time class
+  midpoint <- t_start + (t_end - t_start) / 2
+  as_hms(midpoint)
+}
+```
+
+
+```{r}
+parse_census <- function(user_year = 2024, num_var = c("AGEP", "PWGTP"), 
                          cat_var = c("SEX"), geo = "STATE", sub_geo = NULL ){
-  #Checing for the correct year
-  if(!(year %in% c(2021, 2022, 2023, 2024))){
+  #Checking for the correct year
+  user_year <- as.numeric(user_year)
+  if(!(user_year %in% c(2021, 2022, 2023, 2024))){
     stop("Year should be one of (2021, 2022, 2023, or 2024)")
   }
   
@@ -100,8 +134,56 @@ parse_census <- function(year = 2024, num_var = c("AGEP", "PWGTP"),
     num_var <- c(num_var, "PWGTP")
   }
   
+  #Checking that also another numeric variable is shown
+  if(length(num_var) == 1 & num_var == "PWGTP"){
+    print("Needs to specify a numric variable other than `PWGTP`, `AGEP` will be added by default")
+    num_var <- c("AGEP", num_var)
+  }
   
+  #Checking that the numeric variables are in the allowed values
+  num_allowed <- c("AGEP", "GASP", "GRPIP", "JWAP", "JWDP", "JWMNP", "PWGTP")
+  if (!all(num_var %in% num_allowed)){
+    stop("Numeric variables need to be between (AGEP, GASP, GRPIP, JWAP (time), JWDP (time), and JWMNP")
+  }
   
+  #Checking for the categorical variables
+  cat_allowed <- c("FER", "HHL", "SCH", "SCHL", "SEX")
+  if(!all(cat_var %in% cat_allowed))
+    stop("Categorical variables need to be between (FER, HHL, SCH, SCHL, and SEX)")
+  
+  #Checking that the geography level is just one of the geographies allowed
+  geo_allowed <- c("REGION", "DIVISION", "STATE")
+  if(!(geo %in% geo_allowed) | length(geo != 1)){
+    stop("Geography level needs to be ONE between REGION, DIVISION, or STATE")
+  }
+  
+  #Assigning default values for each of the geography levels
+  if(is.null(sub_geo)){
+    if(geo == "STATE"){
+      sub_geo <- "North Carolina/NC"
+      } else if (geo == "REGION"){
+        sub_geo <- "South"
+      } else if (geo == "DIVISION"){
+        sub_geo <- "East South Central (South region)"
+      }
+  }
+  
+  # Checking that the allowed variables are correct
+  
+  year_2digit <- substr(as.character(user_year), 3, 4)
+  #Get it to look in the correct list of variables
+  target_name <- paste0("Variables_", year_2digit)
+  Variables <- readRDS("data/Variables_census.rds")
+  
+  if(!all(sub_geo %in% Variables[[target_name]][[geo]]$values$item)){
+    
+    stop(paste0("Geography subset is not valid for ",geo))
+  }
+  
+  if(sub_geo == "all"){
+    
+    
+  }
 }
 ```
 
