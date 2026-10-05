@@ -22,6 +22,7 @@ library(httr)
 library(jsonlite)
 library(lubridate)
 library(hms)
+library(janitor)
 ```
 
 
@@ -80,7 +81,8 @@ get_to_tibble <- function(u_info){
   
   parsed <- fromJSON(rawToChar(u_info$content))
   
-  n_tibble <- as_tibble(parsed$data)
+  n_tibble <- as_tibble(parsed) |>
+    row_to_names(row_number = 1)
   
   return(n_tibble)
   
@@ -129,13 +131,24 @@ parse_census <- function(user_year = 2024, num_var = c("AGEP", "PWGTP"),
     stop("Year should be one of (2021, 2022, 2023, or 2024)")
   }
   
+  geo_api <- tolower(geo)
+  
+  if(user_year %in% c(2021, 2022)){
+    geo <- "ST"
+  }
+  
+  #Turning every input in upper case
+  num_var <- toupper(as.character(num_var))
+  cat_var <- toupper(as.character(cat_var))
+  geo <- toupper(as.character(geo))
+  
   #Checking for the presence of "PWGTP", always needs to be returned
   if(!("PWGTP" %in% num_var)){
     num_var <- c(num_var, "PWGTP")
   }
   
   #Checking that also another numeric variable is shown
-  if(length(num_var) == 1 & num_var == "PWGTP"){
+  if(length(num_var) == 1 && num_var == "PWGTP"){
     print("Needs to specify a numric variable other than `PWGTP`, `AGEP` will be added by default")
     num_var <- c("AGEP", num_var)
   }
@@ -152,38 +165,82 @@ parse_census <- function(user_year = 2024, num_var = c("AGEP", "PWGTP"),
     stop("Categorical variables need to be between (FER, HHL, SCH, SCHL, and SEX)")
   
   #Checking that the geography level is just one of the geographies allowed
-  geo_allowed <- c("REGION", "DIVISION", "STATE")
-  if(!(geo %in% geo_allowed) | length(geo != 1)){
+  
+    geo_column <- if(user_year %in% c(2021, 2022) && geo == "STATE") {
+    "ST"
+    } else {
+    geo
+    }
+    
+  geo_allowed <- c("REGION", "DIVISION", "STATE", "ST")
+  if(!(geo %in% geo_allowed) || length(geo) != 1){
     stop("Geography level needs to be ONE between REGION, DIVISION, or STATE")
   }
   
+
+  
+  #Lower case to filter the api
+  #geo_api <- tolower(geo)
+  
   #Assigning default values for each of the geography levels
   if(is.null(sub_geo)){
-    if(geo == "STATE"){
-      sub_geo <- "North Carolina/NC"
-      } else if (geo == "REGION"){
-        sub_geo <- "South"
-      } else if (geo == "DIVISION"){
-        sub_geo <- "East South Central (South region)"
-      }
+    sub_geo <- switch(
+      geo,
+      STATE = "North Carolina/NC",
+      REGION = "South",
+      DIVISION = "East South Central (South region)"
+    )
   }
   
-  # Checking that the allowed variables are correct
   
+  
+  # Checking that the allowed variables are correct
   year_2digit <- substr(as.character(user_year), 3, 4)
+  
   #Get it to look in the correct list of variables
   target_name <- paste0("Variables_", year_2digit)
   Variables <- readRDS("data/Variables_census.rds")
   
-  if(!all(sub_geo %in% Variables[[target_name]][[geo]]$values$item)){
+  if(all(tolower(sub_geo) != "all") && 
+     !all(sub_geo %in% Variables[[target_name]][[geo]]$values$item)){
     
     stop(paste0("Geography subset is not valid for ",geo))
   }
   
-  if(sub_geo == "all"){
-    
-    
+  #Turning inputs in census codes
+  geo_lookup <- Variables[[target_name]][[geo]]$values$item
+  
+  if(all(tolower(sub_geo) == "all")){
+    geo_codes <- "*"
+  } else {
+      geo_codes <- names(geo_lookup[match(sub_geo, geo_lookup)])
+  
+      geo_codes <- as.character(geo_codes)
+      
+      geo_codes <- paste(geo_codes, collapse = ",")
   }
+  print(geo_codes)
+  #Putting the columns into a string for the query
+  all_col <- unique(c(num_var, cat_var))
+  
+  string_cols <- paste(all_col, collapse = ",")
+  
+  census_key <- Sys.getenv("census_key")
+  
+  #As the api just allow to request one geography or all geographies, we will create a helper for one geography and then mix the outputs.
+
+  census_response <- httr::GET(
+    url = paste0("https://api.census.gov/data/",as.character(user_year),
+               "/acs/acs1/pums"),
+    query = list(
+    get = string_cols,
+    `for` = paste0(geo_api, ":", geo_codes),
+    key = census_key
+    )
+    )
+  return(census_response)
+  #get_to_tibble(census_response)
+
 }
 ```
 
