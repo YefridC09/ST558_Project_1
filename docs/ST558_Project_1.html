@@ -770,7 +770,7 @@ We get the variables that we need (Shown below in the function definition), appl
 <span id="cb21-59"><a href="#cb21-59" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">is.factor</span>(census_tibble[[cat_var]])) {</span>
 <span id="cb21-60"><a href="#cb21-60" aria-hidden="true" tabindex="-1"></a>    census_tibble[[cat_var]] <span class="ot">&lt;-</span> <span class="fu">factor</span>(census_tibble[[cat_var]])</span>
 <span id="cb21-61"><a href="#cb21-61" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb21-62"><a href="#cb21-62" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">paste</span>(cat_var, num_var, <span class="at">sep =</span> <span class="st">", "</span>))</span>
+<span id="cb21-62"><a href="#cb21-62" aria-hidden="true" tabindex="-1"></a><span class="co">#print(paste(cat_var, num_var, sep = ", "))</span></span>
 <span id="cb21-63"><a href="#cb21-63" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Creating the weighted boxplot using ggplot</span></span>
 <span id="cb21-64"><a href="#cb21-64" aria-hidden="true" tabindex="-1"></a>  census_plot <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="at">data =</span> census_tibble,</span>
 <span id="cb21-65"><a href="#cb21-65" aria-hidden="true" tabindex="-1"></a>                        <span class="fu">aes</span>(<span class="at">x =</span> .data[[cat_var]],</span>
@@ -785,7 +785,7 @@ We get the variables that we need (Shown below in the function definition), appl
 <span id="cb21-74"><a href="#cb21-74" aria-hidden="true" tabindex="-1"></a>      <span class="at">x =</span> cat_var,</span>
 <span id="cb21-75"><a href="#cb21-75" aria-hidden="true" tabindex="-1"></a>      <span class="at">y =</span> num_var</span>
 <span id="cb21-76"><a href="#cb21-76" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">+</span></span>
-<span id="cb21-77"><a href="#cb21-77" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_minimal</span>()</span>
+<span id="cb21-77"><a href="#cb21-77" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_bw</span>()</span>
 <span id="cb21-78"><a href="#cb21-78" aria-hidden="true" tabindex="-1"></a>  </span>
 <span id="cb21-79"><a href="#cb21-79" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(census_plot)</span>
 <span id="cb21-80"><a href="#cb21-80" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -836,8 +836,10 @@ categorical_vector
 <p>And then test Graphical summaries</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot.census</span>(WY_data, <span class="at">num_var =</span> <span class="st">"GASP"</span>, <span class="at">cat_var =</span> <span class="st">"year"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] "year, GASP"</code></pre>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Computation failed in `stat_boxplot()`.
+Caused by error in `loadNamespace()`:
+! there is no package called 'quantreg'</code></pre>
 </div>
 <div class="cell-output-display">
 <div>
@@ -851,6 +853,65 @@ categorical_vector
 </section>
 <section id="investigation" class="level2">
 <h2 class="anchored" data-anchor-id="investigation">Investigation</h2>
+<p>We want investigate the gross rent as a percent of the household income in from 2021 to 2024, in the south east region of the United State, focusing on the states of North Carolina, Tennessee, and South Carolina.</p>
+<p>And relate that with the school enrollment.</p>
+<p>First we are going to get the tibble with the data for those states and the variables required.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>SE_data <span class="ot">&lt;-</span> <span class="fu">parse_census_years</span>(<span class="dv">2021</span><span class="sc">:</span><span class="dv">2024</span>, <span class="at">num_var =</span> <span class="fu">c</span>(<span class="st">"AGEP"</span>, <span class="st">"GRPIP"</span>), </span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>                   <span class="at">cat_var =</span> <span class="fu">c</span>(<span class="st">"SEX"</span>, <span class="st">"SCH"</span>), <span class="at">geo =</span> <span class="st">"STATE"</span>,</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>                   <span class="at">sub_geo =</span> <span class="fu">c</span>(<span class="st">"North Carolina/NC"</span>, <span class="st">"Tennessee/TN"</span>,</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>                               <span class="st">"South Carolina/SC"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>We are going to do numerical summaries for all the variables</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary.census</span>(SE_data, <span class="at">num_var =</span> <span class="fu">c</span>(<span class="st">"GRPIP"</span>, <span class="st">"AGEP"</span>), <span class="at">cat_var =</span> <span class="fu">c</span>(<span class="st">"SCH"</span>, <span class="st">"SEX"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>$numeric_summaries
+$numeric_summaries$GRPIP
+              mean standard_deviation 
+          9.584105          21.090354 
+
+$numeric_summaries$AGEP
+              mean standard_deviation 
+          39.81854           23.29106 
+
+
+$categorical_counts
+$categorical_counts$SCH
+categorical_vector
+                  N/A (less than 3 years old) 
+                                        25355 
+    No, has not attended in the last 3 months 
+                                       724315 
+Yes, private school or college or home school 
+                                        42886 
+         Yes, public school or public college 
+                                       156874 
+
+$categorical_counts$SEX
+categorical_vector
+Female   Male 
+489211 460219 </code></pre>
+</div>
+</div>
+<p>Based on these summaries, the average percentage of income that is used for rent across these states is about 9.6%, however the standard deviation is high compared to the mean value, in order to get more insight we are going to graph the values for the box plots per state and investigate the distributions.</p>
+<p>Also when observing the count for the school enrollment, we can see that most of the concentration is in the factor when the person has not attended in the last 3 months, which match with the average age of the people, which one explanation could be that most of the people already graduated from college or from school.</p>
+<p>We are going to generate boxplots for the average percentage of income used in rent vs the state.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot.census</span>(SE_data, <span class="at">num_var =</span> <span class="st">"GRPIP"</span>, <span class="at">cat_var =</span> <span class="st">"state"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Computation failed in `stat_boxplot()`.
+Caused by error in `loadNamespace()`:
+! there is no package called 'quantreg'</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ST558_Project_1_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
 
 
 </section>
