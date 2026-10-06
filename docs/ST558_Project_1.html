@@ -905,9 +905,11 @@ Female   Male
 </div>
 <p>Now we can see that across state the median and the distribution is approximately the same, with Tennessee have a lower deviation compared to North Carolina and South Carolina.</p>
 <p>Also there is a higher concentration of outliers at the highest level for Tennessee and North Carolina, but lower in South Carolina, giving us some insight how is the rent compared to income in those states.</p>
-<p>Finally we are going to compare how is the age is related with school enrollment.</p>
+<p>Finally we are going to compare how is the percentage of income for rent is related with school enrollment.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot.census</span>(SE_data <span class="sc">|&gt;</span> <span class="fu">filter</span>(GRPIP <span class="sc">!=</span> <span class="dv">0</span>) , <span class="at">num_var =</span> <span class="st">"GRPIP"</span>, <span class="at">cat_var =</span> <span class="st">"SCH"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot.census</span>(SE_data <span class="sc">|&gt;</span> <span class="fu">filter</span>(GRPIP <span class="sc">!=</span> <span class="dv">0</span>) <span class="sc">|&gt;</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>              <span class="fu">filter</span>(SCH <span class="sc">!=</span> <span class="st">"N/A (less than 3 years old)"</span>) ,</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>            <span class="at">num_var =</span> <span class="st">"GRPIP"</span>, <span class="at">cat_var =</span> <span class="st">"SCH"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
