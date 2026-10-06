@@ -327,3 +327,204 @@ parse_census <- function(user_year = 2024, num_var = c("AGEP", "PWGTP"),
 }
 ```
 
+### 1.3 Combining Years
+
+Now we are going to create a function that will use the previous function for multiple years and will append those tibbles in a new tibble with the specified year.
+
+```{r}
+parse_census_years <- function(user_years = c(2022, 2024),
+                               num_var = c("AGEP", "PWGTP"),
+                               cat_var = c("SEX"),
+                               geo = "STATE",
+                               sub_geo = NULL){
+  
+  #Checking that the years are allowed
+  user_years <- as.numeric(user_years)
+  
+  if( !all(user_years %in% c(2021, 2022, 2023, 2024))){
+    stop ("Years should be between 2021, 2022, 2023, or 2024")
+  }
+  
+  #Create a list for the results
+  census_list <- list()
+  
+  #Now we use a loop for each year
+  for (one_year in user_years){
+    
+    #applying the funstion prevously created for each year
+    census_year <- parse_census(
+      user_year = one_year,
+      num_var = num_var,
+      cat_var = cat_var,
+      geo = geo,
+      sub_geo = sub_geo
+    )
+    
+    #Now we add the year variable
+    census_year <- census_year |>
+      mutate(year = one_year)
+    
+    #and finally we save the tibble in the list
+    census_list[[as.character(one_year)]] <- census_year
+    
+  }
+  
+  #Finally we combine all the results from the list of tibbles into a tibble
+  census_all <- bind_rows(
+    census_list) |>
+    relocate(year)
+  
+  return(census_all)
+}
+```
+
+### 1.4 Testing
+
+
+
+## 2. Writing a Generic Function for Summarizing
+
+### 2.1 Numeric Summaries
+
+For census summary method we are going to write a function that produces means and standard deviations for our numeric variable, and counts for the categorical variables.
+
+```{r}
+summary.census <- function(census_tible, num_var = NULL, cat_var = NULL){
+  
+  #Getting all the summaries for the numeric variables when num_var is not especified
+  if( is.null(num_var)){
+    
+    #First we select all the variables that are numeric
+    num_var <- names(census_tible)[sapply(census_tible, is.numeric)]
+    
+    #And remove the variables that we cannot do summaries with
+    
+    num_var <- setdiff(num_var, c("PWGTP", "year", "JWAP", "JWDP"))
+    
+  } else{
+    
+    #we standardize the input
+    num_var <- toupper(as.character(num_var))
+    
+    #And remove the time variable which cannot be summarized
+    num_var <- setdiff(num_var, c("PWGTP", "JWAP", "JWDP"))
+    
+  }
+  
+  #And we are going to do the same for the categorical variables
+  if(is.null(cat_var)){
+    
+    #Get the categorical variables
+    cat_var <- names(census_tible)[sapply(census_tible,
+                                          function(x){is.factor(x) ||
+                                              is.character(x)})]
+    
+    #Year needs to be treated as categorical
+    if("year" %in% names(census_tible) && !(year %in% cat_var)){
+      
+      cat_var <- c(cat_var, "year")
+    }
+  } else {
+    
+    cat_var <- as.character(cat_var)
+    
+   #Now we are going to correct the case for the geography and year variables from the tibble 
+    for (i in seq_along(cat_var)){
+      
+      if(!(cat_var[i] %in% names(census_tible)) &&
+         toupper(cat_var[i]) %in% names(census_tible)){
+        
+        cat_var[i] <- toupper(cat_var[i])
+      }
+    }
+  }
+  
+  #Checking that the requested variable exist
+ 
+  num_not_found <- setdiff(num_var,
+    names(census_tible))
+
+  if (length(num_not_found) > 0) {
+    stop("The numeric variables were not found")
+  }
+
+  cat_not_found <- setdiff(cat_var,
+    names(census_tibble))
+
+  if (length(cat_not_found) > 0) {
+    stop("The categorical variables were not found")
+  }
+  
+  #For the output, we are going to store our results in lists
+  num_summaries <- list()
+  cat_summaries <- list()
+
+  #We are going to calculate the numeric summaries
+  for (one_num_var in num_var) {
+
+    numeric_vector <- census_tibble[[one_num_var]]
+    weight_vector <- census_tibble[["PWGTP"]]
+
+    # Keeping only observations where the variable and weight exist
+    complete_observations <- (!is.na(numeric_vector) &
+      !is.na(weight_vector))
+
+    numeric_vector_complete <- numeric_vector[complete_observations]
+
+    weight_vector_complete <- weight_vector[complete_observations]
+
+    #We need to check that observations exist where both of the values match
+    if (
+      length(numeric_vector_complete) == 0 ||
+      sum(weight_vector_complete) == 0
+    ) {
+
+      sample_mean <- NA_real_
+      sample_sd <- NA_real_
+
+    } else {
+
+      # After confirming that, we proceed to calculate the summaries
+      sample_mean <- sum(numeric_vector_complete *
+                           weight_vector_complete) / 
+        sum(weight_vector_complete)
+
+      # Weighted sample standard deviation
+      sample_sd <- sqrt( sum(numeric_vector_complete^2 *
+                               weight_vector_complete) /
+                           sum(weight_vector_complete) -
+                           sample_mean^2)
+    }
+
+    # Save the results for the variable in the list
+    num_summaries[[one_num_var]] <- c(mean = sample_mean,
+                                      standard_deviation = sample_sd)
+  }
+  
+  #And we calculate the values for the categorical variables
+  for (one_cat_var in cat_var) {
+
+    categorical_vector <- census_tible[[one_cat_var]]
+
+    # Year must be treated as categorical
+    if (one_cat_var == "year") {
+      categorical_vector <- factor(categorical_vector)
+    }
+
+    # Count the observations in every category
+    category_counts <- table(categorical_vector, useNA = "ifany")
+
+    cat_summaries[[one_cat_var]] <- category_counts
+  }
+  
+  #At the end we put everything in a list with all the summaries
+  census_summary <- list(
+    numeric_summaries = num_summaries,
+    categorical_counts = cat_summaries
+  )
+
+  return(census_summary)
+  
+}
+```
+
