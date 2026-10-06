@@ -696,5 +696,5 @@ Also there is a higher concentration of outliers at the highest level for Tennes
 Finally we are going to compare how is the age is related with school enrollment.
 
 ```{r}
-plot.census(SE_data , num_var = "AGEP", cat_var = "SCH")
+plot.census(SE_data |> filter(GRPIP != 0) , num_var = "GRPIP", cat_var = "SCH")
 ```

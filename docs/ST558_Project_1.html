@@ -147,6 +147,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="introduction" class="level2">
 <h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>The American Community Survey provides detailed demographic, social, and economic information about the United States. This project uses R to retrieve and process survey data from the Census API for the years 2021 through 2024. Custom functions are developed to validate user inputs, query data for selected geographic areas, convert coded values into meaningful categories, and combine data across multiple years. Additionally, summary and plotting methods are created to analyze numeric and categorical variables. These tools are then used to investigate gross rent as a percentage of household income and its relationship with school enrollment in North Carolina, South Carolina, and Tennessee.</p>
 </section>
 <section id="data-processing" class="level2">
 <h2 class="anchored" data-anchor-id="data-processing">1. Data Processing</h2>
@@ -898,6 +899,19 @@ Female   Male
 <div>
 <figure class="figure">
 <p><img src="ST558_Project_1_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Now we can see that across state the median and the distribution is approximately the same, with Tennessee have a lower deviation compared to North Carolina and South Carolina.</p>
+<p>Also there is a higher concentration of outliers at the highest level for Tennessee and North Carolina, but lower in South Carolina, giving us some insight how is the rent compared to income in those states.</p>
+<p>Finally we are going to compare how is the age is related with school enrollment.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot.census</span>(SE_data <span class="sc">|&gt;</span> <span class="fu">filter</span>(GRPIP <span class="sc">!=</span> <span class="dv">0</span>) , <span class="at">num_var =</span> <span class="st">"GRPIP"</span>, <span class="at">cat_var =</span> <span class="st">"SCH"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ST558_Project_1_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
