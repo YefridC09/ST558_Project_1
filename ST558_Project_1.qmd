@@ -127,20 +127,22 @@ parse_census <- function(user_year = 2024, num_var = c("AGEP", "PWGTP"),
                          cat_var = c("SEX"), geo = "STATE", sub_geo = NULL ){
   #Checking for the correct year
   user_year <- as.numeric(user_year)
-  if(!(user_year %in% c(2021, 2022, 2023, 2024))){
+  if(!(user_year %in% c(2021, 2022, 2023, 2024)) || length(user_year) != 1){
     stop("Year should be one of (2021, 2022, 2023, or 2024)")
   }
   
-  geo_api <- tolower(geo)
-  
-  if(user_year %in% c(2021, 2022)){
-    geo <- "ST"
-  }
-  
-  #Turning every input in upper case
+   geo_api <- tolower(geo)
+  # 
+  # if(user_year %in% c(2021, 2022)){
+  #   geo <- "ST"
+  # }
+  # 
+  #Turning every input in upper case to standardize
   num_var <- toupper(as.character(num_var))
   cat_var <- toupper(as.character(cat_var))
   geo <- toupper(as.character(geo))
+  
+  
   
   #Checking for the presence of "PWGTP", always needs to be returned
   if(!("PWGTP" %in% num_var)){
@@ -165,19 +167,30 @@ parse_census <- function(user_year = 2024, num_var = c("AGEP", "PWGTP"),
     stop("Categorical variables need to be between (FER, HHL, SCH, SCHL, and SEX)")
   
   #Checking that the geography level is just one of the geographies allowed
+  geo_allowed <- c("REGION", "DIVISION", "STATE", "ST")
+  if(!(geo %in% geo_allowed) || length(geo) != 1){
+    stop("Geography level needs to be ONE between REGION, DIVISION, or STATE")
+  }  
+    
+  #Variable for the API query, which always use "state" in the query.
+  geo_api <- tolower(geo)
   
-    geo_column <- if(user_year %in% c(2021, 2022) && geo == "STATE") {
+  #Variable for the stored data
+  geo_var <- if(user_year %in% c(2021, 2022) && geo == "STATE") {
     "ST"
     } else {
     geo
     }
     
-  geo_allowed <- c("REGION", "DIVISION", "STATE", "ST")
-  if(!(geo %in% geo_allowed) || length(geo) != 1){
-    stop("Geography level needs to be ONE between REGION, DIVISION, or STATE")
-  }
+  # Checking that the allowed variables are correct
+  year_2digit <- substr(as.character(user_year), 3, 4)
   
-
+  #Get it to look in the correct list of variables
+  target_name <- paste0("Variables_", year_2digit)
+  Variables <- readRDS("data/Variables_census.rds")
+  
+  variables_m <- Variables[[target_name]]
+  
   
   #Lower case to filter the api
   #geo_api <- tolower(geo)
@@ -187,30 +200,27 @@ parse_census <- function(user_year = 2024, num_var = c("AGEP", "PWGTP"),
     sub_geo <- switch(
       geo,
       STATE = "North Carolina/NC",
+      ST = "North Carolina/NC",
       REGION = "South",
       DIVISION = "East South Central (South region)"
     )
   }
   
   
-  print(paste0("after", geo))
-  # Checking that the allowed variables are correct
-  year_2digit <- substr(as.character(user_year), 3, 4)
-  
-  #Get it to look in the correct list of variables
-  target_name <- paste0("Variables_", year_2digit)
-  Variables <- readRDS("data/Variables_census.rds")
+  #print(paste0("after", geo))
+
   
   if(all(tolower(sub_geo) != "all") && 
-     !all(sub_geo %in% Variables[[target_name]][[geo]]$values$item)){
+     !all(sub_geo %in% variables_m[[geo_var]]$values$item)){
     
     stop(paste0("Geography subset is not valid for ",geo))
   }
   
   #Turning inputs in census codes
-  geo_lookup <- Variables[[target_name]][[geo]]$values$item
+  geo_lookup <- variables_m[[geo_var]]$values$item
+  #print(geo_lookup)
   
-  print(sub_geo)
+  #print(sub_geo)
   
   if(all(tolower(sub_geo) == "all")){
     geo_codes <- "*"
@@ -221,7 +231,7 @@ parse_census <- function(user_year = 2024, num_var = c("AGEP", "PWGTP"),
       
       geo_codes <- paste(geo_codes, collapse = ",")
   }
-  print(geo_codes)
+  #print(geo_codes)
   #Putting the columns into a string for the query
   all_col <- unique(c(num_var, cat_var))
   
@@ -240,8 +250,8 @@ parse_census <- function(user_year = 2024, num_var = c("AGEP", "PWGTP"),
     key = census_key
     )
     )
-  return(census_response)
-  #get_to_tibble(census_response)
+  #census_response
+  get_to_tibble(census_response)
 
 }
 ```
