@@ -624,7 +624,7 @@ plot.census <- function(census_tibble, cat_var, num_var,...) {
   if (!is.factor(census_tibble[[cat_var]])) {
     census_tibble[[cat_var]] <- factor(census_tibble[[cat_var]])
   }
-print(paste(cat_var, num_var, sep = ", "))
+#print(paste(cat_var, num_var, sep = ", "))
   # Creating the weighted boxplot using ggplot
   census_plot <- ggplot(data = census_tibble,
                         aes(x = .data[[cat_var]],
@@ -660,4 +660,32 @@ plot.census(WY_data, num_var = "GASP", cat_var = "year")
 ```
 
 ## Investigation
+
+We want investigate the gross rent as a percent of the household income in from 2021 to 2024, in the south east region of the United State, focusing on the states of North Carolina, Tennessee, and South Carolina.
+
+And relate that with the school enrollment.
+
+First we are going to get the tibble with the data for those states and the variables required.
+
+```{r}
+SE_data <- parse_census_years(2021:2024, num_var = c("AGEP", "GRPIP"), 
+                   cat_var = c("SEX", "SCH"), geo = "STATE",
+                   sub_geo = c("North Carolina/NC", "Tennessee/TN",
+                               "South Carolina/SC"))
+```
+
+We are going to do numerical summaries for all the variables
+```{r}
+summary.census(SE_data, num_var = c("GRPIP", "AGEP"), cat_var = c("SCH", "SEX"))
+```
+
+Based on these summaries, the average percentage of income that is used for rent across these states is about 9.6%, however the standard deviation is high compared to the mean value, in order to get more insight we are going to graph the values for the box plots per state and investigate the distributions.
+
+Also when observing the count for the school enrollment, we can see that most of the concentration is in the factor when the person has not attended in the last 3 months, which match with the average age of the people, which one explanation could be that most of the people already graduated from college or from school.
+
+We are going to generate boxplots for the average percentage of income used in rent vs the state.
+
+```{r}
+plot.census(SE_data, num_var = "GRPIP", cat_var = "state")
+```
 
