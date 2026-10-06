@@ -251,7 +251,78 @@ parse_census <- function(user_year = 2024, num_var = c("AGEP", "PWGTP"),
     )
     )
   #census_response
-  get_to_tibble(census_response)
+  census_data <- get_to_tibble(census_response) 
+  
+  #Changing the categorical variables into factors
+  for (one_cat in cat_var){
+    
+    #Get the list that we are going to use to look up
+    cat_lookup <- variables_m[[one_cat]]$values$item
+    
+    #Obtain a names vector to look for the variables that match
+    cat_lookup <- unlist(cat_lookup,
+                         use.names = TRUE)
+    
+    #Lookup and replace the values
+    census_data[[one_cat]] <- factor(
+      unname(cat_lookup[as.character(census_data[[one_cat]])])
+    )
+  }
+    
+  #Changing the time variables into theit midpoint
+  
+  time_var <- intersect( c("JWAP", "JWDP"),
+                         names(census_data))
+  
+  #We are going to iterate to get the actual string based on the code provided
+  for (one_time in time_var){
+
+    #Getting the list to lookup
+    time_lookup <- variables_m[[one_time]]$values$item
+
+    #Turning them int a named vector
+    time_lookup <- unlist( time_lookup,
+                           use.names = TRUE)
+
+    #Putting the time string before using the midpoint function helper
+    time_string <- unname( time_lookup[as.character(census_data[[one_time]])]
+                           )
+
+    #Now we can rename the column with the codes and use the midpoint function
+    census_data[[one_time]] <- parse_jwp_midpoint(time_string)
+  }
+  
+  #Getting the values that are different from the time variables
+  numeric_var <- setdiff( num_var,
+                          c("JWAP", "JWDP"))
+  
+  #Changing them to numric variables
+  census_data <- census_data |>
+    mutate(
+      across(
+        any_of(numeric_var),
+        as.numeric
+      )
+    )
+  
+  #And we want to get the labels for the geography data
+  geo_column <- geo_api
+  
+  #We also need to get the correct value to look for in the variables (different for 2021 and 2022)
+  geo_lookup <- variables_m[[geo_var]]$values$item
+  
+  #We get the named vector
+  geo_lookup <- unlist(geo_lookup, use.names = TRUE)
+  
+  #and we put the names in the tibble
+  census_data[[geo_column]] <- factor(
+    unname( geo_lookup[as.character(census_data[[geo_column]])])
+  )
+  
+  #Required code
+  class(census_data) <- c("census", class(census_data))
+  
+  census_data
 
 }
 ```
