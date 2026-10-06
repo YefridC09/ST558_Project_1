@@ -380,6 +380,35 @@ parse_census_years <- function(user_years = c(2022, 2024),
 
 ### 1.4 Testing
 
+First we are going to check that the restrictions work.   
+
+The first one is check that is for the correct years.
+
+```{r}
+#| error: TRUE
+
+parse_census_years(2020)
+
+#For a different numeric variable than the allowed
+parse_census_years(2021, num_var = "AGS")
+
+#Trying to get more than one geography
+parse_census_years(2022, geo = c("REGION", "STATE"))
+
+#Requesting geographies that are not part of the one chosen
+parse_census_years(2022, geo = "STATE", sub_geo = "South")
+```
+
+Now we are going to extract data that is valid and get the tibble for those.
+
+Using the smallest state (by population) to make sure it runs smoothly.
+
+```{r}
+WY_data <- parse_census_years(2021:2023, num_var = c("AGEP", "GASP", "JWAP"), 
+                   cat_var = c("FER", "SEX"), geo = "STATE", 
+                   sub_geo = "Wyoming/WY")
+WY_data
+```
 
 
 ## 2. Writing a Generic Function for Summarizing
@@ -389,13 +418,13 @@ parse_census_years <- function(user_years = c(2022, 2024),
 For census summary method we are going to write a function that produces means and standard deviations for our numeric variable, and counts for the categorical variables.
 
 ```{r}
-summary.census <- function(census_tible, num_var = NULL, cat_var = NULL){
+summary.census <- function(census_tibble, num_var = NULL, cat_var = NULL){
   
   #Getting all the summaries for the numeric variables when num_var is not especified
   if( is.null(num_var)){
     
     #First we select all the variables that are numeric
-    num_var <- names(census_tible)[sapply(census_tible, is.numeric)]
+    num_var <- names(census_tibble)[sapply(census_tibble, is.numeric)]
     
     #And remove the variables that we cannot do summaries with
     
@@ -415,12 +444,12 @@ summary.census <- function(census_tible, num_var = NULL, cat_var = NULL){
   if(is.null(cat_var)){
     
     #Get the categorical variables
-    cat_var <- names(census_tible)[sapply(census_tible,
+    cat_var <- names(census_tibble)[sapply(census_tibble,
                                           function(x){is.factor(x) ||
                                               is.character(x)})]
     
     #Year needs to be treated as categorical
-    if("year" %in% names(census_tible) && !(year %in% cat_var)){
+    if("year" %in% names(census_tibble) && !("year" %in% cat_var)){
       
       cat_var <- c(cat_var, "year")
     }
@@ -431,8 +460,8 @@ summary.census <- function(census_tible, num_var = NULL, cat_var = NULL){
    #Now we are going to correct the case for the geography and year variables from the tibble 
     for (i in seq_along(cat_var)){
       
-      if(!(cat_var[i] %in% names(census_tible)) &&
-         toupper(cat_var[i]) %in% names(census_tible)){
+      if(!(cat_var[i] %in% names(census_tibble)) &&
+         toupper(cat_var[i]) %in% names(census_tibble)){
         
         cat_var[i] <- toupper(cat_var[i])
       }
@@ -442,7 +471,7 @@ summary.census <- function(census_tible, num_var = NULL, cat_var = NULL){
   #Checking that the requested variable exist
  
   num_not_found <- setdiff(num_var,
-    names(census_tible))
+    names(census_tibble))
 
   if (length(num_not_found) > 0) {
     stop("The numeric variables were not found")
@@ -504,7 +533,7 @@ summary.census <- function(census_tible, num_var = NULL, cat_var = NULL){
   #And we calculate the values for the categorical variables
   for (one_cat_var in cat_var) {
 
-    categorical_vector <- census_tible[[one_cat_var]]
+    categorical_vector <- census_tibble[[one_cat_var]]
 
     # Year must be treated as categorical
     if (one_cat_var == "year") {
@@ -595,11 +624,11 @@ plot.census <- function(census_tibble, cat_var, num_var,...) {
   if (!is.factor(census_tibble[[cat_var]])) {
     census_tibble[[cat_var]] <- factor(census_tibble[[cat_var]])
   }
-
+print(paste(cat_var, num_var, sep = ", "))
   # Creating the weighted boxplot using ggplot
   census_plot <- ggplot(data = census_tibble,
-                        aes(x = get(cat_var),
-                            y = get(num_var),
+                        aes(x = .data[[cat_var]],
+                            y = .data[[num_var]],
                             weight = PWGTP)
   ) +
     geom_boxplot(na.rm = TRUE) +
@@ -610,9 +639,25 @@ plot.census <- function(census_tibble, cat_var, num_var,...) {
       x = cat_var,
       y = num_var
     ) +
-    theme_minimal()
+    theme_bw()
   
   return(census_plot)
 }
 ```
+
+### 2.3 Testing
+
+First we are going to test the numerical summaries.
+
+```{r}
+summary.census(WY_data)
+```
+
+And then test Graphical summaries
+
+```{r}
+plot.census(WY_data, num_var = "GASP", cat_var = "year")
+```
+
+## Investigation
 

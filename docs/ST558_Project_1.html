@@ -502,6 +502,62 @@ We get the variables that we need (Shown below in the function definition), appl
 </section>
 <section id="testing" class="level3">
 <h3 class="anchored" data-anchor-id="testing">1.4 Testing</h3>
+<p>First we are going to check that the restrictions work.</p>
+<p>The first one is check that is for the correct years.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">parse_census_years</span>(<span class="dv">2020</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error in `parse_census_years()`:
+! Years should be between 2021, 2022, 2023, or 2024</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">#For a different numeric variable than the allowed</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">parse_census_years</span>(<span class="dv">2021</span>, <span class="at">num_var =</span> <span class="st">"AGS"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error in `parse_census()`:
+! Numeric variables need to be between (AGEP, GASP, GRPIP, JWAP (time), JWDP (time), and JWMNP</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Trying to get more than one geography</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">parse_census_years</span>(<span class="dv">2022</span>, <span class="at">geo =</span> <span class="fu">c</span>(<span class="st">"REGION"</span>, <span class="st">"STATE"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error in `!(geo %in% geo_allowed) || length(geo) != 1`:
+! 'length = 2' in coercion to 'logical(1)'</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Requesting geographies that are not part of the one chosen</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">parse_census_years</span>(<span class="dv">2022</span>, <span class="at">geo =</span> <span class="st">"STATE"</span>, <span class="at">sub_geo =</span> <span class="st">"South"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error in `parse_census()`:
+! Geography subset is not valid for STATE</code></pre>
+</div>
+</div>
+<p>Now we are going to extract data that is valid and get the tibble for those.</p>
+<p>Using the smallest state (by population) to make sure it runs smoothly.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>WY_data <span class="ot">&lt;-</span> <span class="fu">parse_census_years</span>(<span class="dv">2021</span><span class="sc">:</span><span class="dv">2023</span>, <span class="at">num_var =</span> <span class="fu">c</span>(<span class="st">"AGEP"</span>, <span class="st">"GASP"</span>, <span class="st">"JWAP"</span>), </span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>                   <span class="at">cat_var =</span> <span class="fu">c</span>(<span class="st">"FER"</span>, <span class="st">"SEX"</span>), <span class="at">geo =</span> <span class="st">"STATE"</span>, </span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>                   <span class="at">sub_geo =</span> <span class="st">"Wyoming/WY"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: The `x` argument of `as_tibble.matrix()` must have unique column names if
+`.name_repair` is omitted as of tibble 2.0.0.
+ℹ Using compatibility `.name_repair`.</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>WY_data</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 17,847 × 8
+    year  AGEP  GASP JWAP   PWGTP FER                                SEX   state
+   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;time&gt; &lt;dbl&gt; &lt;fct&gt;                              &lt;fct&gt; &lt;fct&gt;
+ 1  2021    38     3    NA     39 No                                 Fema… Wyom…
+ 2  2021    21     3 08:37     45 N/A (less than 15 years/greater t… Male  Wyom…
+ 3  2021    47     3    NA    218 No                                 Fema… Wyom…
+ 4  2021    85     3    NA     10 N/A (less than 15 years/greater t… Fema… Wyom…
+ 5  2021    19     3    NA     12 N/A (less than 15 years/greater t… Male  Wyom…
+ 6  2021    19     3    NA    108 No                                 Fema… Wyom…
+ 7  2021    48     3    NA     91 N/A (less than 15 years/greater t… Male  Wyom…
+ 8  2021    87     3    NA     71 N/A (less than 15 years/greater t… Fema… Wyom…
+ 9  2021    36     3    NA      8 N/A (less than 15 years/greater t… Male  Wyom…
+10  2021     9     3    NA    122 N/A (less than 15 years/greater t… Male  Wyom…
+# ℹ 17,837 more rows</code></pre>
+</div>
+</div>
 </section>
 </section>
 <section id="writing-a-generic-function-for-summarizing" class="level2">
@@ -510,233 +566,293 @@ We get the variables that we need (Shown below in the function definition), appl
 <h3 class="anchored" data-anchor-id="numeric-summaries">2.1 Numeric Summaries</h3>
 <p>For census summary method we are going to write a function that produces means and standard deviations for our numeric variable, and counts for the categorical variables.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>summary.census <span class="ot">&lt;-</span> <span class="cf">function</span>(census_tible, <span class="at">num_var =</span> <span class="cn">NULL</span>, <span class="at">cat_var =</span> <span class="cn">NULL</span>){</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">#Getting all the summaries for the numeric variables when num_var is not especified</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>( <span class="fu">is.null</span>(num_var)){</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">#First we select all the variables that are numeric</span></span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    num_var <span class="ot">&lt;-</span> <span class="fu">names</span>(census_tible)[<span class="fu">sapply</span>(census_tible, is.numeric)]</span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">#And remove the variables that we cannot do summaries with</span></span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    num_var <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(num_var, <span class="fu">c</span>(<span class="st">"PWGTP"</span>, <span class="st">"year"</span>, <span class="st">"JWAP"</span>, <span class="st">"JWDP"</span>))</span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span>{</span>
-<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    <span class="co">#we standardize the input</span></span>
-<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>    num_var <span class="ot">&lt;-</span> <span class="fu">toupper</span>(<span class="fu">as.character</span>(num_var))</span>
-<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">#And remove the time variable which cannot be summarized</span></span>
-<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>    num_var <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(num_var, <span class="fu">c</span>(<span class="st">"PWGTP"</span>, <span class="st">"JWAP"</span>, <span class="st">"JWDP"</span>))</span>
-<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>  <span class="co">#And we are going to do the same for the categorical variables</span></span>
-<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>(<span class="fu">is.null</span>(cat_var)){</span>
-<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>    <span class="co">#Get the categorical variables</span></span>
-<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>    cat_var <span class="ot">&lt;-</span> <span class="fu">names</span>(census_tible)[<span class="fu">sapply</span>(census_tible,</span>
-<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>                                          <span class="cf">function</span>(x){<span class="fu">is.factor</span>(x) <span class="sc">||</span></span>
-<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>                                              <span class="fu">is.character</span>(x)})]</span>
-<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>    <span class="co">#Year needs to be treated as categorical</span></span>
-<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span>(<span class="st">"year"</span> <span class="sc">%in%</span> <span class="fu">names</span>(census_tible) <span class="sc">&amp;&amp;</span> <span class="sc">!</span>(year <span class="sc">%in%</span> cat_var)){</span>
-<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>      </span>
-<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a>      cat_var <span class="ot">&lt;-</span> <span class="fu">c</span>(cat_var, <span class="st">"year"</span>)</span>
-<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
-<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a>    cat_var <span class="ot">&lt;-</span> <span class="fu">as.character</span>(cat_var)</span>
-<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a>   <span class="co">#Now we are going to correct the case for the geography and year variables from the tibble </span></span>
-<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(cat_var)){</span>
-<span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a>      </span>
-<span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span>(<span class="sc">!</span>(cat_var[i] <span class="sc">%in%</span> <span class="fu">names</span>(census_tible)) <span class="sc">&amp;&amp;</span></span>
-<span id="cb8-44"><a href="#cb8-44" aria-hidden="true" tabindex="-1"></a>         <span class="fu">toupper</span>(cat_var[i]) <span class="sc">%in%</span> <span class="fu">names</span>(census_tible)){</span>
-<span id="cb8-45"><a href="#cb8-45" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb8-46"><a href="#cb8-46" aria-hidden="true" tabindex="-1"></a>        cat_var[i] <span class="ot">&lt;-</span> <span class="fu">toupper</span>(cat_var[i])</span>
-<span id="cb8-47"><a href="#cb8-47" aria-hidden="true" tabindex="-1"></a>      }</span>
-<span id="cb8-48"><a href="#cb8-48" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb8-49"><a href="#cb8-49" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb8-50"><a href="#cb8-50" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb8-51"><a href="#cb8-51" aria-hidden="true" tabindex="-1"></a>  <span class="co">#Checking that the requested variable exist</span></span>
-<span id="cb8-52"><a href="#cb8-52" aria-hidden="true" tabindex="-1"></a> </span>
-<span id="cb8-53"><a href="#cb8-53" aria-hidden="true" tabindex="-1"></a>  num_not_found <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(num_var,</span>
-<span id="cb8-54"><a href="#cb8-54" aria-hidden="true" tabindex="-1"></a>    <span class="fu">names</span>(census_tible))</span>
-<span id="cb8-55"><a href="#cb8-55" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-56"><a href="#cb8-56" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>(num_not_found) <span class="sc">&gt;</span> <span class="dv">0</span>) {</span>
-<span id="cb8-57"><a href="#cb8-57" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"The numeric variables were not found"</span>)</span>
-<span id="cb8-58"><a href="#cb8-58" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb8-59"><a href="#cb8-59" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-60"><a href="#cb8-60" aria-hidden="true" tabindex="-1"></a>  cat_not_found <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(cat_var,</span>
-<span id="cb8-61"><a href="#cb8-61" aria-hidden="true" tabindex="-1"></a>    <span class="fu">names</span>(census_tibble))</span>
-<span id="cb8-62"><a href="#cb8-62" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-63"><a href="#cb8-63" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>(cat_not_found) <span class="sc">&gt;</span> <span class="dv">0</span>) {</span>
-<span id="cb8-64"><a href="#cb8-64" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"The categorical variables were not found"</span>)</span>
-<span id="cb8-65"><a href="#cb8-65" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb8-66"><a href="#cb8-66" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb8-67"><a href="#cb8-67" aria-hidden="true" tabindex="-1"></a>  <span class="co">#For the output, we are going to store our results in lists</span></span>
-<span id="cb8-68"><a href="#cb8-68" aria-hidden="true" tabindex="-1"></a>  num_summaries <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
-<span id="cb8-69"><a href="#cb8-69" aria-hidden="true" tabindex="-1"></a>  cat_summaries <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
-<span id="cb8-70"><a href="#cb8-70" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-71"><a href="#cb8-71" aria-hidden="true" tabindex="-1"></a>  <span class="co">#We are going to calculate the numeric summaries</span></span>
-<span id="cb8-72"><a href="#cb8-72" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (one_num_var <span class="cf">in</span> num_var) {</span>
-<span id="cb8-73"><a href="#cb8-73" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-74"><a href="#cb8-74" aria-hidden="true" tabindex="-1"></a>    numeric_vector <span class="ot">&lt;-</span> census_tibble[[one_num_var]]</span>
-<span id="cb8-75"><a href="#cb8-75" aria-hidden="true" tabindex="-1"></a>    weight_vector <span class="ot">&lt;-</span> census_tibble[[<span class="st">"PWGTP"</span>]]</span>
-<span id="cb8-76"><a href="#cb8-76" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-77"><a href="#cb8-77" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Keeping only observations where the variable and weight exist</span></span>
-<span id="cb8-78"><a href="#cb8-78" aria-hidden="true" tabindex="-1"></a>    complete_observations <span class="ot">&lt;-</span> (<span class="sc">!</span><span class="fu">is.na</span>(numeric_vector) <span class="sc">&amp;</span></span>
-<span id="cb8-79"><a href="#cb8-79" aria-hidden="true" tabindex="-1"></a>      <span class="sc">!</span><span class="fu">is.na</span>(weight_vector))</span>
-<span id="cb8-80"><a href="#cb8-80" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-81"><a href="#cb8-81" aria-hidden="true" tabindex="-1"></a>    numeric_vector_complete <span class="ot">&lt;-</span> numeric_vector[complete_observations]</span>
-<span id="cb8-82"><a href="#cb8-82" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-83"><a href="#cb8-83" aria-hidden="true" tabindex="-1"></a>    weight_vector_complete <span class="ot">&lt;-</span> weight_vector[complete_observations]</span>
-<span id="cb8-84"><a href="#cb8-84" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-85"><a href="#cb8-85" aria-hidden="true" tabindex="-1"></a>    <span class="co">#We need to check that observations exist where both of the values match</span></span>
-<span id="cb8-86"><a href="#cb8-86" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (</span>
-<span id="cb8-87"><a href="#cb8-87" aria-hidden="true" tabindex="-1"></a>      <span class="fu">length</span>(numeric_vector_complete) <span class="sc">==</span> <span class="dv">0</span> <span class="sc">||</span></span>
-<span id="cb8-88"><a href="#cb8-88" aria-hidden="true" tabindex="-1"></a>      <span class="fu">sum</span>(weight_vector_complete) <span class="sc">==</span> <span class="dv">0</span></span>
-<span id="cb8-89"><a href="#cb8-89" aria-hidden="true" tabindex="-1"></a>    ) {</span>
-<span id="cb8-90"><a href="#cb8-90" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-91"><a href="#cb8-91" aria-hidden="true" tabindex="-1"></a>      sample_mean <span class="ot">&lt;-</span> <span class="cn">NA_real_</span></span>
-<span id="cb8-92"><a href="#cb8-92" aria-hidden="true" tabindex="-1"></a>      sample_sd <span class="ot">&lt;-</span> <span class="cn">NA_real_</span></span>
-<span id="cb8-93"><a href="#cb8-93" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-94"><a href="#cb8-94" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> {</span>
-<span id="cb8-95"><a href="#cb8-95" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-96"><a href="#cb8-96" aria-hidden="true" tabindex="-1"></a>      <span class="co"># After confirming that, we proceed to calculate the summaries</span></span>
-<span id="cb8-97"><a href="#cb8-97" aria-hidden="true" tabindex="-1"></a>      sample_mean <span class="ot">&lt;-</span> <span class="fu">sum</span>(numeric_vector_complete <span class="sc">*</span></span>
-<span id="cb8-98"><a href="#cb8-98" aria-hidden="true" tabindex="-1"></a>                           weight_vector_complete) <span class="sc">/</span> </span>
-<span id="cb8-99"><a href="#cb8-99" aria-hidden="true" tabindex="-1"></a>        <span class="fu">sum</span>(weight_vector_complete)</span>
-<span id="cb8-100"><a href="#cb8-100" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-101"><a href="#cb8-101" aria-hidden="true" tabindex="-1"></a>      <span class="co"># Weighted sample standard deviation</span></span>
-<span id="cb8-102"><a href="#cb8-102" aria-hidden="true" tabindex="-1"></a>      sample_sd <span class="ot">&lt;-</span> <span class="fu">sqrt</span>( <span class="fu">sum</span>(numeric_vector_complete<span class="sc">^</span><span class="dv">2</span> <span class="sc">*</span></span>
-<span id="cb8-103"><a href="#cb8-103" aria-hidden="true" tabindex="-1"></a>                               weight_vector_complete) <span class="sc">/</span></span>
-<span id="cb8-104"><a href="#cb8-104" aria-hidden="true" tabindex="-1"></a>                           <span class="fu">sum</span>(weight_vector_complete) <span class="sc">-</span></span>
-<span id="cb8-105"><a href="#cb8-105" aria-hidden="true" tabindex="-1"></a>                           sample_mean<span class="sc">^</span><span class="dv">2</span>)</span>
-<span id="cb8-106"><a href="#cb8-106" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb8-107"><a href="#cb8-107" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-108"><a href="#cb8-108" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Save the results for the variable in the list</span></span>
-<span id="cb8-109"><a href="#cb8-109" aria-hidden="true" tabindex="-1"></a>    num_summaries[[one_num_var]] <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="at">mean =</span> sample_mean,</span>
-<span id="cb8-110"><a href="#cb8-110" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">standard_deviation =</span> sample_sd)</span>
-<span id="cb8-111"><a href="#cb8-111" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb8-112"><a href="#cb8-112" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb8-113"><a href="#cb8-113" aria-hidden="true" tabindex="-1"></a>  <span class="co">#And we calculate the values for the categorical variables</span></span>
-<span id="cb8-114"><a href="#cb8-114" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (one_cat_var <span class="cf">in</span> cat_var) {</span>
-<span id="cb8-115"><a href="#cb8-115" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-116"><a href="#cb8-116" aria-hidden="true" tabindex="-1"></a>    categorical_vector <span class="ot">&lt;-</span> census_tible[[one_cat_var]]</span>
-<span id="cb8-117"><a href="#cb8-117" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-118"><a href="#cb8-118" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Year must be treated as categorical</span></span>
-<span id="cb8-119"><a href="#cb8-119" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (one_cat_var <span class="sc">==</span> <span class="st">"year"</span>) {</span>
-<span id="cb8-120"><a href="#cb8-120" aria-hidden="true" tabindex="-1"></a>      categorical_vector <span class="ot">&lt;-</span> <span class="fu">factor</span>(categorical_vector)</span>
-<span id="cb8-121"><a href="#cb8-121" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb8-122"><a href="#cb8-122" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-123"><a href="#cb8-123" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Count the observations in every category</span></span>
-<span id="cb8-124"><a href="#cb8-124" aria-hidden="true" tabindex="-1"></a>    category_counts <span class="ot">&lt;-</span> <span class="fu">table</span>(categorical_vector, <span class="at">useNA =</span> <span class="st">"ifany"</span>)</span>
-<span id="cb8-125"><a href="#cb8-125" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-126"><a href="#cb8-126" aria-hidden="true" tabindex="-1"></a>    cat_summaries[[one_cat_var]] <span class="ot">&lt;-</span> category_counts</span>
-<span id="cb8-127"><a href="#cb8-127" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb8-128"><a href="#cb8-128" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb8-129"><a href="#cb8-129" aria-hidden="true" tabindex="-1"></a>  <span class="co">#At the end we put everything in a list with all the summaries</span></span>
-<span id="cb8-130"><a href="#cb8-130" aria-hidden="true" tabindex="-1"></a>  census_summary <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
-<span id="cb8-131"><a href="#cb8-131" aria-hidden="true" tabindex="-1"></a>    <span class="at">numeric_summaries =</span> num_summaries,</span>
-<span id="cb8-132"><a href="#cb8-132" aria-hidden="true" tabindex="-1"></a>    <span class="at">categorical_counts =</span> cat_summaries</span>
-<span id="cb8-133"><a href="#cb8-133" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb8-134"><a href="#cb8-134" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-135"><a href="#cb8-135" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(census_summary)</span>
-<span id="cb8-136"><a href="#cb8-136" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb8-137"><a href="#cb8-137" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>summary.census <span class="ot">&lt;-</span> <span class="cf">function</span>(census_tibble, <span class="at">num_var =</span> <span class="cn">NULL</span>, <span class="at">cat_var =</span> <span class="cn">NULL</span>){</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">#Getting all the summaries for the numeric variables when num_var is not especified</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>( <span class="fu">is.null</span>(num_var)){</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">#First we select all the variables that are numeric</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>    num_var <span class="ot">&lt;-</span> <span class="fu">names</span>(census_tibble)[<span class="fu">sapply</span>(census_tibble, is.numeric)]</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">#And remove the variables that we cannot do summaries with</span></span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>    num_var <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(num_var, <span class="fu">c</span>(<span class="st">"PWGTP"</span>, <span class="st">"year"</span>, <span class="st">"JWAP"</span>, <span class="st">"JWDP"</span>))</span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span>{</span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>    <span class="co">#we standardize the input</span></span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>    num_var <span class="ot">&lt;-</span> <span class="fu">toupper</span>(<span class="fu">as.character</span>(num_var))</span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">#And remove the time variable which cannot be summarized</span></span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>    num_var <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(num_var, <span class="fu">c</span>(<span class="st">"PWGTP"</span>, <span class="st">"JWAP"</span>, <span class="st">"JWDP"</span>))</span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb20-22"><a href="#cb20-22" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb20-23"><a href="#cb20-23" aria-hidden="true" tabindex="-1"></a>  <span class="co">#And we are going to do the same for the categorical variables</span></span>
+<span id="cb20-24"><a href="#cb20-24" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>(<span class="fu">is.null</span>(cat_var)){</span>
+<span id="cb20-25"><a href="#cb20-25" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb20-26"><a href="#cb20-26" aria-hidden="true" tabindex="-1"></a>    <span class="co">#Get the categorical variables</span></span>
+<span id="cb20-27"><a href="#cb20-27" aria-hidden="true" tabindex="-1"></a>    cat_var <span class="ot">&lt;-</span> <span class="fu">names</span>(census_tibble)[<span class="fu">sapply</span>(census_tibble,</span>
+<span id="cb20-28"><a href="#cb20-28" aria-hidden="true" tabindex="-1"></a>                                          <span class="cf">function</span>(x){<span class="fu">is.factor</span>(x) <span class="sc">||</span></span>
+<span id="cb20-29"><a href="#cb20-29" aria-hidden="true" tabindex="-1"></a>                                              <span class="fu">is.character</span>(x)})]</span>
+<span id="cb20-30"><a href="#cb20-30" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb20-31"><a href="#cb20-31" aria-hidden="true" tabindex="-1"></a>    <span class="co">#Year needs to be treated as categorical</span></span>
+<span id="cb20-32"><a href="#cb20-32" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span>(<span class="st">"year"</span> <span class="sc">%in%</span> <span class="fu">names</span>(census_tibble) <span class="sc">&amp;&amp;</span> <span class="sc">!</span>(<span class="st">"year"</span> <span class="sc">%in%</span> cat_var)){</span>
+<span id="cb20-33"><a href="#cb20-33" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb20-34"><a href="#cb20-34" aria-hidden="true" tabindex="-1"></a>      cat_var <span class="ot">&lt;-</span> <span class="fu">c</span>(cat_var, <span class="st">"year"</span>)</span>
+<span id="cb20-35"><a href="#cb20-35" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb20-36"><a href="#cb20-36" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb20-37"><a href="#cb20-37" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb20-38"><a href="#cb20-38" aria-hidden="true" tabindex="-1"></a>    cat_var <span class="ot">&lt;-</span> <span class="fu">as.character</span>(cat_var)</span>
+<span id="cb20-39"><a href="#cb20-39" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb20-40"><a href="#cb20-40" aria-hidden="true" tabindex="-1"></a>   <span class="co">#Now we are going to correct the case for the geography and year variables from the tibble </span></span>
+<span id="cb20-41"><a href="#cb20-41" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(cat_var)){</span>
+<span id="cb20-42"><a href="#cb20-42" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb20-43"><a href="#cb20-43" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span>(<span class="sc">!</span>(cat_var[i] <span class="sc">%in%</span> <span class="fu">names</span>(census_tibble)) <span class="sc">&amp;&amp;</span></span>
+<span id="cb20-44"><a href="#cb20-44" aria-hidden="true" tabindex="-1"></a>         <span class="fu">toupper</span>(cat_var[i]) <span class="sc">%in%</span> <span class="fu">names</span>(census_tibble)){</span>
+<span id="cb20-45"><a href="#cb20-45" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb20-46"><a href="#cb20-46" aria-hidden="true" tabindex="-1"></a>        cat_var[i] <span class="ot">&lt;-</span> <span class="fu">toupper</span>(cat_var[i])</span>
+<span id="cb20-47"><a href="#cb20-47" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb20-48"><a href="#cb20-48" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb20-49"><a href="#cb20-49" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb20-50"><a href="#cb20-50" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb20-51"><a href="#cb20-51" aria-hidden="true" tabindex="-1"></a>  <span class="co">#Checking that the requested variable exist</span></span>
+<span id="cb20-52"><a href="#cb20-52" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb20-53"><a href="#cb20-53" aria-hidden="true" tabindex="-1"></a>  num_not_found <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(num_var,</span>
+<span id="cb20-54"><a href="#cb20-54" aria-hidden="true" tabindex="-1"></a>    <span class="fu">names</span>(census_tibble))</span>
+<span id="cb20-55"><a href="#cb20-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-56"><a href="#cb20-56" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>(num_not_found) <span class="sc">&gt;</span> <span class="dv">0</span>) {</span>
+<span id="cb20-57"><a href="#cb20-57" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"The numeric variables were not found"</span>)</span>
+<span id="cb20-58"><a href="#cb20-58" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb20-59"><a href="#cb20-59" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-60"><a href="#cb20-60" aria-hidden="true" tabindex="-1"></a>  cat_not_found <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(cat_var,</span>
+<span id="cb20-61"><a href="#cb20-61" aria-hidden="true" tabindex="-1"></a>    <span class="fu">names</span>(census_tibble))</span>
+<span id="cb20-62"><a href="#cb20-62" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-63"><a href="#cb20-63" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>(cat_not_found) <span class="sc">&gt;</span> <span class="dv">0</span>) {</span>
+<span id="cb20-64"><a href="#cb20-64" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"The categorical variables were not found"</span>)</span>
+<span id="cb20-65"><a href="#cb20-65" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb20-66"><a href="#cb20-66" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb20-67"><a href="#cb20-67" aria-hidden="true" tabindex="-1"></a>  <span class="co">#For the output, we are going to store our results in lists</span></span>
+<span id="cb20-68"><a href="#cb20-68" aria-hidden="true" tabindex="-1"></a>  num_summaries <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb20-69"><a href="#cb20-69" aria-hidden="true" tabindex="-1"></a>  cat_summaries <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb20-70"><a href="#cb20-70" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-71"><a href="#cb20-71" aria-hidden="true" tabindex="-1"></a>  <span class="co">#We are going to calculate the numeric summaries</span></span>
+<span id="cb20-72"><a href="#cb20-72" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (one_num_var <span class="cf">in</span> num_var) {</span>
+<span id="cb20-73"><a href="#cb20-73" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-74"><a href="#cb20-74" aria-hidden="true" tabindex="-1"></a>    numeric_vector <span class="ot">&lt;-</span> census_tibble[[one_num_var]]</span>
+<span id="cb20-75"><a href="#cb20-75" aria-hidden="true" tabindex="-1"></a>    weight_vector <span class="ot">&lt;-</span> census_tibble[[<span class="st">"PWGTP"</span>]]</span>
+<span id="cb20-76"><a href="#cb20-76" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-77"><a href="#cb20-77" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Keeping only observations where the variable and weight exist</span></span>
+<span id="cb20-78"><a href="#cb20-78" aria-hidden="true" tabindex="-1"></a>    complete_observations <span class="ot">&lt;-</span> (<span class="sc">!</span><span class="fu">is.na</span>(numeric_vector) <span class="sc">&amp;</span></span>
+<span id="cb20-79"><a href="#cb20-79" aria-hidden="true" tabindex="-1"></a>      <span class="sc">!</span><span class="fu">is.na</span>(weight_vector))</span>
+<span id="cb20-80"><a href="#cb20-80" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-81"><a href="#cb20-81" aria-hidden="true" tabindex="-1"></a>    numeric_vector_complete <span class="ot">&lt;-</span> numeric_vector[complete_observations]</span>
+<span id="cb20-82"><a href="#cb20-82" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-83"><a href="#cb20-83" aria-hidden="true" tabindex="-1"></a>    weight_vector_complete <span class="ot">&lt;-</span> weight_vector[complete_observations]</span>
+<span id="cb20-84"><a href="#cb20-84" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-85"><a href="#cb20-85" aria-hidden="true" tabindex="-1"></a>    <span class="co">#We need to check that observations exist where both of the values match</span></span>
+<span id="cb20-86"><a href="#cb20-86" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (</span>
+<span id="cb20-87"><a href="#cb20-87" aria-hidden="true" tabindex="-1"></a>      <span class="fu">length</span>(numeric_vector_complete) <span class="sc">==</span> <span class="dv">0</span> <span class="sc">||</span></span>
+<span id="cb20-88"><a href="#cb20-88" aria-hidden="true" tabindex="-1"></a>      <span class="fu">sum</span>(weight_vector_complete) <span class="sc">==</span> <span class="dv">0</span></span>
+<span id="cb20-89"><a href="#cb20-89" aria-hidden="true" tabindex="-1"></a>    ) {</span>
+<span id="cb20-90"><a href="#cb20-90" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-91"><a href="#cb20-91" aria-hidden="true" tabindex="-1"></a>      sample_mean <span class="ot">&lt;-</span> <span class="cn">NA_real_</span></span>
+<span id="cb20-92"><a href="#cb20-92" aria-hidden="true" tabindex="-1"></a>      sample_sd <span class="ot">&lt;-</span> <span class="cn">NA_real_</span></span>
+<span id="cb20-93"><a href="#cb20-93" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-94"><a href="#cb20-94" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> {</span>
+<span id="cb20-95"><a href="#cb20-95" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-96"><a href="#cb20-96" aria-hidden="true" tabindex="-1"></a>      <span class="co"># After confirming that, we proceed to calculate the summaries</span></span>
+<span id="cb20-97"><a href="#cb20-97" aria-hidden="true" tabindex="-1"></a>      sample_mean <span class="ot">&lt;-</span> <span class="fu">sum</span>(numeric_vector_complete <span class="sc">*</span></span>
+<span id="cb20-98"><a href="#cb20-98" aria-hidden="true" tabindex="-1"></a>                           weight_vector_complete) <span class="sc">/</span> </span>
+<span id="cb20-99"><a href="#cb20-99" aria-hidden="true" tabindex="-1"></a>        <span class="fu">sum</span>(weight_vector_complete)</span>
+<span id="cb20-100"><a href="#cb20-100" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-101"><a href="#cb20-101" aria-hidden="true" tabindex="-1"></a>      <span class="co"># Weighted sample standard deviation</span></span>
+<span id="cb20-102"><a href="#cb20-102" aria-hidden="true" tabindex="-1"></a>      sample_sd <span class="ot">&lt;-</span> <span class="fu">sqrt</span>( <span class="fu">sum</span>(numeric_vector_complete<span class="sc">^</span><span class="dv">2</span> <span class="sc">*</span></span>
+<span id="cb20-103"><a href="#cb20-103" aria-hidden="true" tabindex="-1"></a>                               weight_vector_complete) <span class="sc">/</span></span>
+<span id="cb20-104"><a href="#cb20-104" aria-hidden="true" tabindex="-1"></a>                           <span class="fu">sum</span>(weight_vector_complete) <span class="sc">-</span></span>
+<span id="cb20-105"><a href="#cb20-105" aria-hidden="true" tabindex="-1"></a>                           sample_mean<span class="sc">^</span><span class="dv">2</span>)</span>
+<span id="cb20-106"><a href="#cb20-106" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb20-107"><a href="#cb20-107" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-108"><a href="#cb20-108" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Save the results for the variable in the list</span></span>
+<span id="cb20-109"><a href="#cb20-109" aria-hidden="true" tabindex="-1"></a>    num_summaries[[one_num_var]] <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="at">mean =</span> sample_mean,</span>
+<span id="cb20-110"><a href="#cb20-110" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">standard_deviation =</span> sample_sd)</span>
+<span id="cb20-111"><a href="#cb20-111" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb20-112"><a href="#cb20-112" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb20-113"><a href="#cb20-113" aria-hidden="true" tabindex="-1"></a>  <span class="co">#And we calculate the values for the categorical variables</span></span>
+<span id="cb20-114"><a href="#cb20-114" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (one_cat_var <span class="cf">in</span> cat_var) {</span>
+<span id="cb20-115"><a href="#cb20-115" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-116"><a href="#cb20-116" aria-hidden="true" tabindex="-1"></a>    categorical_vector <span class="ot">&lt;-</span> census_tibble[[one_cat_var]]</span>
+<span id="cb20-117"><a href="#cb20-117" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-118"><a href="#cb20-118" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Year must be treated as categorical</span></span>
+<span id="cb20-119"><a href="#cb20-119" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (one_cat_var <span class="sc">==</span> <span class="st">"year"</span>) {</span>
+<span id="cb20-120"><a href="#cb20-120" aria-hidden="true" tabindex="-1"></a>      categorical_vector <span class="ot">&lt;-</span> <span class="fu">factor</span>(categorical_vector)</span>
+<span id="cb20-121"><a href="#cb20-121" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb20-122"><a href="#cb20-122" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-123"><a href="#cb20-123" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Count the observations in every category</span></span>
+<span id="cb20-124"><a href="#cb20-124" aria-hidden="true" tabindex="-1"></a>    category_counts <span class="ot">&lt;-</span> <span class="fu">table</span>(categorical_vector, <span class="at">useNA =</span> <span class="st">"ifany"</span>)</span>
+<span id="cb20-125"><a href="#cb20-125" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-126"><a href="#cb20-126" aria-hidden="true" tabindex="-1"></a>    cat_summaries[[one_cat_var]] <span class="ot">&lt;-</span> category_counts</span>
+<span id="cb20-127"><a href="#cb20-127" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb20-128"><a href="#cb20-128" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb20-129"><a href="#cb20-129" aria-hidden="true" tabindex="-1"></a>  <span class="co">#At the end we put everything in a list with all the summaries</span></span>
+<span id="cb20-130"><a href="#cb20-130" aria-hidden="true" tabindex="-1"></a>  census_summary <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb20-131"><a href="#cb20-131" aria-hidden="true" tabindex="-1"></a>    <span class="at">numeric_summaries =</span> num_summaries,</span>
+<span id="cb20-132"><a href="#cb20-132" aria-hidden="true" tabindex="-1"></a>    <span class="at">categorical_counts =</span> cat_summaries</span>
+<span id="cb20-133"><a href="#cb20-133" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb20-134"><a href="#cb20-134" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-135"><a href="#cb20-135" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(census_summary)</span>
+<span id="cb20-136"><a href="#cb20-136" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb20-137"><a href="#cb20-137" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="graphical-summaries" class="level3">
 <h3 class="anchored" data-anchor-id="graphical-summaries">2.2 Graphical Summaries</h3>
 <p>In this section we are going to create a generic plot() function for a census class tibble. It is required that the user specify one categorical and one numeric variable. The output will be a boxplot of the numeric variable at the levels of the categorical variable.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>plot.census <span class="ot">&lt;-</span> <span class="cf">function</span>(census_tibble, cat_var, num_var,...) {</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Turning the variable names into character values</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  cat_var <span class="ot">&lt;-</span> <span class="fu">as.character</span>(cat_var)</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  num_var <span class="ot">&lt;-</span> <span class="fu">as.character</span>(num_var)</span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Checking that only one categorical variable was provided</span></span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>(cat_var) <span class="sc">!=</span> <span class="dv">1</span>) {</span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"You need to specify exactly one categorical variable."</span>)</span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Checking that only one numeric variable was provided</span></span>
-<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>(num_var) <span class="sc">!=</span> <span class="dv">1</span>) {</span>
-<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"You need to specify exactly one numeric variable."</span>)</span>
-<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>  <span class="co"># If the user writes the variable names in lowercase, check whether the uppercase version exists</span></span>
-<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>(<span class="sc">!</span>(cat_var <span class="sc">%in%</span> <span class="fu">names</span>(census_tibble)) <span class="sc">&amp;&amp;</span></span>
-<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">toupper</span>(cat_var) <span class="sc">%in%</span> <span class="fu">names</span>(census_tibble)) {</span>
-<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>    cat_var <span class="ot">&lt;-</span> <span class="fu">toupper</span>(cat_var)</span>
-<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>(<span class="sc">!</span>(num_var <span class="sc">%in%</span> <span class="fu">names</span>(census_tibble)) <span class="sc">&amp;&amp;</span></span>
-<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>    <span class="fu">toupper</span>(num_var) <span class="sc">%in%</span> <span class="fu">names</span>(census_tibble)) {</span>
-<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>    num_var <span class="ot">&lt;-</span> <span class="fu">toupper</span>(num_var)</span>
-<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Checking that the categorical variable exists</span></span>
-<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span>(cat_var <span class="sc">%in%</span> <span class="fu">names</span>(census_tibble))) {</span>
-<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"The categorical variable was not found in the census tibble"</span>)</span>
-<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Checking that the numeric variable exists</span></span>
-<span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span>(num_var <span class="sc">%in%</span> <span class="fu">names</span>(census_tibble))) {</span>
-<span id="cb9-35"><a href="#cb9-35" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"The numeric variable was not found in the census tibble"</span>)</span>
-<span id="cb9-36"><a href="#cb9-36" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb9-37"><a href="#cb9-37" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-38"><a href="#cb9-38" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Time variables should not be used as numeric variables</span></span>
-<span id="cb9-39"><a href="#cb9-39" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (num_var <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"JWAP"</span>, <span class="st">"JWDP"</span>)) {</span>
-<span id="cb9-40"><a href="#cb9-40" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"JWAP and JWDP are time variables and cannot be used as numeric variables"</span>)</span>
-<span id="cb9-41"><a href="#cb9-41" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb9-42"><a href="#cb9-42" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-43"><a href="#cb9-43" aria-hidden="true" tabindex="-1"></a>  <span class="co"># PWGTP should only be used as the weight</span></span>
-<span id="cb9-44"><a href="#cb9-44" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (num_var <span class="sc">==</span> <span class="st">"PWGTP"</span>) {</span>
-<span id="cb9-45"><a href="#cb9-45" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"PWGTP is the weight variable and cannot be used as the numeric variable"</span>)</span>
-<span id="cb9-46"><a href="#cb9-46" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb9-47"><a href="#cb9-47" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-48"><a href="#cb9-48" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Checking that the selected numeric variable is numeric</span></span>
-<span id="cb9-49"><a href="#cb9-49" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">is.numeric</span>(census_tibble[[num_var]])) {</span>
-<span id="cb9-50"><a href="#cb9-50" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(num_var, <span class="st">"needs to be a numeric variable"</span>)</span>
-<span id="cb9-51"><a href="#cb9-51" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb9-52"><a href="#cb9-52" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-53"><a href="#cb9-53" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Treating year as a categorical variable</span></span>
-<span id="cb9-54"><a href="#cb9-54" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (cat_var <span class="sc">==</span> <span class="st">"year"</span>) {</span>
-<span id="cb9-55"><a href="#cb9-55" aria-hidden="true" tabindex="-1"></a>    census_tibble<span class="sc">$</span>year <span class="ot">&lt;-</span> <span class="fu">factor</span>(census_tibble<span class="sc">$</span>year)</span>
-<span id="cb9-56"><a href="#cb9-56" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb9-57"><a href="#cb9-57" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-58"><a href="#cb9-58" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Also make the selected categorical variable a factor in case they are not already</span></span>
-<span id="cb9-59"><a href="#cb9-59" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">is.factor</span>(census_tibble[[cat_var]])) {</span>
-<span id="cb9-60"><a href="#cb9-60" aria-hidden="true" tabindex="-1"></a>    census_tibble[[cat_var]] <span class="ot">&lt;-</span> <span class="fu">factor</span>(census_tibble[[cat_var]])</span>
-<span id="cb9-61"><a href="#cb9-61" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb9-62"><a href="#cb9-62" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-63"><a href="#cb9-63" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Creating the weighted boxplot using ggplot</span></span>
-<span id="cb9-64"><a href="#cb9-64" aria-hidden="true" tabindex="-1"></a>  census_plot <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="at">data =</span> census_tibble,</span>
-<span id="cb9-65"><a href="#cb9-65" aria-hidden="true" tabindex="-1"></a>                        <span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">get</span>(cat_var),</span>
-<span id="cb9-66"><a href="#cb9-66" aria-hidden="true" tabindex="-1"></a>                            <span class="at">y =</span> <span class="fu">get</span>(num_var),</span>
-<span id="cb9-67"><a href="#cb9-67" aria-hidden="true" tabindex="-1"></a>                            <span class="at">weight =</span> PWGTP)</span>
-<span id="cb9-68"><a href="#cb9-68" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb9-69"><a href="#cb9-69" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_boxplot</span>(<span class="at">na.rm =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
-<span id="cb9-70"><a href="#cb9-70" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">title =</span> <span class="fu">paste</span>(</span>
-<span id="cb9-71"><a href="#cb9-71" aria-hidden="true" tabindex="-1"></a>          num_var,</span>
-<span id="cb9-72"><a href="#cb9-72" aria-hidden="true" tabindex="-1"></a>          <span class="st">"by"</span>,</span>
-<span id="cb9-73"><a href="#cb9-73" aria-hidden="true" tabindex="-1"></a>          cat_var),</span>
-<span id="cb9-74"><a href="#cb9-74" aria-hidden="true" tabindex="-1"></a>      <span class="at">x =</span> cat_var,</span>
-<span id="cb9-75"><a href="#cb9-75" aria-hidden="true" tabindex="-1"></a>      <span class="at">y =</span> num_var</span>
-<span id="cb9-76"><a href="#cb9-76" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">+</span></span>
-<span id="cb9-77"><a href="#cb9-77" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_minimal</span>()</span>
-<span id="cb9-78"><a href="#cb9-78" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb9-79"><a href="#cb9-79" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(census_plot)</span>
-<span id="cb9-80"><a href="#cb9-80" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>plot.census <span class="ot">&lt;-</span> <span class="cf">function</span>(census_tibble, cat_var, num_var,...) {</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Turning the variable names into character values</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  cat_var <span class="ot">&lt;-</span> <span class="fu">as.character</span>(cat_var)</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  num_var <span class="ot">&lt;-</span> <span class="fu">as.character</span>(num_var)</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Checking that only one categorical variable was provided</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>(cat_var) <span class="sc">!=</span> <span class="dv">1</span>) {</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"You need to specify exactly one categorical variable."</span>)</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Checking that only one numeric variable was provided</span></span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>(num_var) <span class="sc">!=</span> <span class="dv">1</span>) {</span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"You need to specify exactly one numeric variable."</span>)</span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a>  <span class="co"># If the user writes the variable names in lowercase, check whether the uppercase version exists</span></span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>(<span class="sc">!</span>(cat_var <span class="sc">%in%</span> <span class="fu">names</span>(census_tibble)) <span class="sc">&amp;&amp;</span></span>
+<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">toupper</span>(cat_var) <span class="sc">%in%</span> <span class="fu">names</span>(census_tibble)) {</span>
+<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a>    cat_var <span class="ot">&lt;-</span> <span class="fu">toupper</span>(cat_var)</span>
+<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-23"><a href="#cb21-23" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>(<span class="sc">!</span>(num_var <span class="sc">%in%</span> <span class="fu">names</span>(census_tibble)) <span class="sc">&amp;&amp;</span></span>
+<span id="cb21-24"><a href="#cb21-24" aria-hidden="true" tabindex="-1"></a>    <span class="fu">toupper</span>(num_var) <span class="sc">%in%</span> <span class="fu">names</span>(census_tibble)) {</span>
+<span id="cb21-25"><a href="#cb21-25" aria-hidden="true" tabindex="-1"></a>    num_var <span class="ot">&lt;-</span> <span class="fu">toupper</span>(num_var)</span>
+<span id="cb21-26"><a href="#cb21-26" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb21-27"><a href="#cb21-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-28"><a href="#cb21-28" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Checking that the categorical variable exists</span></span>
+<span id="cb21-29"><a href="#cb21-29" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span>(cat_var <span class="sc">%in%</span> <span class="fu">names</span>(census_tibble))) {</span>
+<span id="cb21-30"><a href="#cb21-30" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"The categorical variable was not found in the census tibble"</span>)</span>
+<span id="cb21-31"><a href="#cb21-31" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb21-32"><a href="#cb21-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-33"><a href="#cb21-33" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Checking that the numeric variable exists</span></span>
+<span id="cb21-34"><a href="#cb21-34" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span>(num_var <span class="sc">%in%</span> <span class="fu">names</span>(census_tibble))) {</span>
+<span id="cb21-35"><a href="#cb21-35" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"The numeric variable was not found in the census tibble"</span>)</span>
+<span id="cb21-36"><a href="#cb21-36" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb21-37"><a href="#cb21-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-38"><a href="#cb21-38" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Time variables should not be used as numeric variables</span></span>
+<span id="cb21-39"><a href="#cb21-39" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (num_var <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"JWAP"</span>, <span class="st">"JWDP"</span>)) {</span>
+<span id="cb21-40"><a href="#cb21-40" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"JWAP and JWDP are time variables and cannot be used as numeric variables"</span>)</span>
+<span id="cb21-41"><a href="#cb21-41" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb21-42"><a href="#cb21-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-43"><a href="#cb21-43" aria-hidden="true" tabindex="-1"></a>  <span class="co"># PWGTP should only be used as the weight</span></span>
+<span id="cb21-44"><a href="#cb21-44" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (num_var <span class="sc">==</span> <span class="st">"PWGTP"</span>) {</span>
+<span id="cb21-45"><a href="#cb21-45" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"PWGTP is the weight variable and cannot be used as the numeric variable"</span>)</span>
+<span id="cb21-46"><a href="#cb21-46" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb21-47"><a href="#cb21-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-48"><a href="#cb21-48" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Checking that the selected numeric variable is numeric</span></span>
+<span id="cb21-49"><a href="#cb21-49" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">is.numeric</span>(census_tibble[[num_var]])) {</span>
+<span id="cb21-50"><a href="#cb21-50" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(num_var, <span class="st">"needs to be a numeric variable"</span>)</span>
+<span id="cb21-51"><a href="#cb21-51" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb21-52"><a href="#cb21-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-53"><a href="#cb21-53" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Treating year as a categorical variable</span></span>
+<span id="cb21-54"><a href="#cb21-54" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (cat_var <span class="sc">==</span> <span class="st">"year"</span>) {</span>
+<span id="cb21-55"><a href="#cb21-55" aria-hidden="true" tabindex="-1"></a>    census_tibble<span class="sc">$</span>year <span class="ot">&lt;-</span> <span class="fu">factor</span>(census_tibble<span class="sc">$</span>year)</span>
+<span id="cb21-56"><a href="#cb21-56" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb21-57"><a href="#cb21-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-58"><a href="#cb21-58" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Also make the selected categorical variable a factor in case they are not already</span></span>
+<span id="cb21-59"><a href="#cb21-59" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">is.factor</span>(census_tibble[[cat_var]])) {</span>
+<span id="cb21-60"><a href="#cb21-60" aria-hidden="true" tabindex="-1"></a>    census_tibble[[cat_var]] <span class="ot">&lt;-</span> <span class="fu">factor</span>(census_tibble[[cat_var]])</span>
+<span id="cb21-61"><a href="#cb21-61" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb21-62"><a href="#cb21-62" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">paste</span>(cat_var, num_var, <span class="at">sep =</span> <span class="st">", "</span>))</span>
+<span id="cb21-63"><a href="#cb21-63" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Creating the weighted boxplot using ggplot</span></span>
+<span id="cb21-64"><a href="#cb21-64" aria-hidden="true" tabindex="-1"></a>  census_plot <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="at">data =</span> census_tibble,</span>
+<span id="cb21-65"><a href="#cb21-65" aria-hidden="true" tabindex="-1"></a>                        <span class="fu">aes</span>(<span class="at">x =</span> .data[[cat_var]],</span>
+<span id="cb21-66"><a href="#cb21-66" aria-hidden="true" tabindex="-1"></a>                            <span class="at">y =</span> .data[[num_var]],</span>
+<span id="cb21-67"><a href="#cb21-67" aria-hidden="true" tabindex="-1"></a>                            <span class="at">weight =</span> PWGTP)</span>
+<span id="cb21-68"><a href="#cb21-68" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb21-69"><a href="#cb21-69" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_boxplot</span>(<span class="at">na.rm =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
+<span id="cb21-70"><a href="#cb21-70" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">title =</span> <span class="fu">paste</span>(</span>
+<span id="cb21-71"><a href="#cb21-71" aria-hidden="true" tabindex="-1"></a>          num_var,</span>
+<span id="cb21-72"><a href="#cb21-72" aria-hidden="true" tabindex="-1"></a>          <span class="st">"by"</span>,</span>
+<span id="cb21-73"><a href="#cb21-73" aria-hidden="true" tabindex="-1"></a>          cat_var),</span>
+<span id="cb21-74"><a href="#cb21-74" aria-hidden="true" tabindex="-1"></a>      <span class="at">x =</span> cat_var,</span>
+<span id="cb21-75"><a href="#cb21-75" aria-hidden="true" tabindex="-1"></a>      <span class="at">y =</span> num_var</span>
+<span id="cb21-76"><a href="#cb21-76" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">+</span></span>
+<span id="cb21-77"><a href="#cb21-77" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_minimal</span>()</span>
+<span id="cb21-78"><a href="#cb21-78" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb21-79"><a href="#cb21-79" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(census_plot)</span>
+<span id="cb21-80"><a href="#cb21-80" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-
-
 </section>
+<section id="testing-1" class="level3">
+<h3 class="anchored" data-anchor-id="testing-1">2.3 Testing</h3>
+<p>First we are going to test the numerical summaries.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary.census</span>(WY_data)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>$numeric_summaries
+$numeric_summaries$AGEP
+              mean standard_deviation 
+          39.73899           23.43705 
+
+$numeric_summaries$GASP
+              mean standard_deviation 
+          85.81903          165.25129 
+
+
+$categorical_counts
+$categorical_counts$FER
+categorical_vector
+N/A (less than 15 years/greater than 50 years/ male) 
+                                               14278 
+                                                  No 
+                                                3362 
+                                                 Yes 
+                                                 207 
+
+$categorical_counts$SEX
+categorical_vector
+Female   Male 
+  8944   8903 
+
+$categorical_counts$state
+categorical_vector
+Wyoming/WY 
+     17847 
+
+$categorical_counts$year
+categorical_vector
+2021 2022 2023 
+5861 5962 6024 </code></pre>
+</div>
+</div>
+<p>And then test Graphical summaries</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot.census</span>(WY_data, <span class="at">num_var =</span> <span class="st">"GASP"</span>, <span class="at">cat_var =</span> <span class="st">"year"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "year, GASP"</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ST558_Project_1_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="investigation" class="level2">
+<h2 class="anchored" data-anchor-id="investigation">Investigation</h2>
+
+
 </section>
 
 </main> <!-- /main -->
