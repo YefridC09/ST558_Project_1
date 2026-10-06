@@ -528,3 +528,91 @@ summary.census <- function(census_tible, num_var = NULL, cat_var = NULL){
 }
 ```
 
+### 2.2 Graphical Summaries
+
+In this section we are going to create a generic plot() function for a census class tibble.
+It is required that the user specify one categorical and one numeric variable. The output will be a boxplot of the numeric variable at the levels of the categorical variable.
+
+```{r}
+plot.census <- function(census_tibble, cat_var, num_var,...) {
+
+  # Turning the variable names into character values
+  cat_var <- as.character(cat_var)
+  num_var <- as.character(num_var)
+
+  # Checking that only one categorical variable was provided
+  if (length(cat_var) != 1) {
+    stop("You need to specify exactly one categorical variable.")
+  }
+
+  # Checking that only one numeric variable was provided
+  if (length(num_var) != 1) {
+    stop("You need to specify exactly one numeric variable.")
+  }
+
+  # If the user writes the variable names in lowercase, check whether the uppercase version exists
+  if(!(cat_var %in% names(census_tibble)) &&
+    toupper(cat_var) %in% names(census_tibble)) {
+    cat_var <- toupper(cat_var)
+  }
+
+  if(!(num_var %in% names(census_tibble)) &&
+    toupper(num_var) %in% names(census_tibble)) {
+    num_var <- toupper(num_var)
+  }
+
+  # Checking that the categorical variable exists
+  if (!(cat_var %in% names(census_tibble))) {
+    stop("The categorical variable was not found in the census tibble")
+  }
+
+  # Checking that the numeric variable exists
+  if (!(num_var %in% names(census_tibble))) {
+    stop("The numeric variable was not found in the census tibble")
+  }
+
+  # Time variables should not be used as numeric variables
+  if (num_var %in% c("JWAP", "JWDP")) {
+    stop("JWAP and JWDP are time variables and cannot be used as numeric variables")
+  }
+
+  # PWGTP should only be used as the weight
+  if (num_var == "PWGTP") {
+    stop("PWGTP is the weight variable and cannot be used as the numeric variable")
+  }
+
+  # Checking that the selected numeric variable is numeric
+  if (!is.numeric(census_tibble[[num_var]])) {
+    stop(num_var, "needs to be a numeric variable")
+  }
+
+  # Treating year as a categorical variable
+  if (cat_var == "year") {
+    census_tibble$year <- factor(census_tibble$year)
+  }
+
+  # Also make the selected categorical variable a factor in case they are not already
+  if (!is.factor(census_tibble[[cat_var]])) {
+    census_tibble[[cat_var]] <- factor(census_tibble[[cat_var]])
+  }
+
+  # Creating the weighted boxplot using ggplot
+  census_plot <- ggplot(data = census_tibble,
+                        aes(x = get(cat_var),
+                            y = get(num_var),
+                            weight = PWGTP)
+  ) +
+    geom_boxplot(na.rm = TRUE) +
+    labs(title = paste(
+          num_var,
+          "by",
+          cat_var),
+      x = cat_var,
+      y = num_var
+    ) +
+    theme_minimal()
+  
+  return(census_plot)
+}
+```
+
